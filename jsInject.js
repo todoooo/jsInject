@@ -41,13 +41,16 @@
         return fn.apply(instance, args);
     };
 
-    JsInject.prototype.register = function (name, dependencyArray, constructor) {
+    JsInject.prototype.register = function (name, dependencyArray, constructor, selector) {
         if (!isArray(dependencyArray)) {
             throw JsInject.ERROR_ARRAY;
         }
-
-        if (this.container[name]) {
-            throw JsInject.ERROR_REGISTRATION;
+        
+        var registered = this.container[name];
+        if (registered) {
+            if ((!selector) || (typeof registered !== 'object')) {
+                throw JsInject.ERROR_REGISTRATION;                
+            }
         }
 
         if (typeof constructor !== 'function') {

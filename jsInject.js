@@ -41,8 +41,8 @@
         return fn.apply(instance, args);
     };
 
-    JsInject.prototype.register = function (name, annotatedArray) {
-        if (!isArray(annotatedArray)) {
+    JsInject.prototype.register = function (name, dependencyArray, constructor) {
+        if (!isArray(dependencyArray)) {
             throw JsInject.ERROR_ARRAY;
         }
 
@@ -50,7 +50,7 @@
             throw JsInject.ERROR_REGISTRATION;
         }
 
-        if (typeof annotatedArray[annotatedArray.length - 1] !== 'function') {
+        if (typeof constructor !== 'function') {
             throw JsInject.ERROR_FUNCTION;
         }
 
@@ -59,9 +59,8 @@
             var Template = function () {},
                 result = {},
                 instance,
-                fn = annotatedArray[annotatedArray.length - 1],
-                deps = annotatedArray.length === 1 ? (annotatedArray[0].$$deps || []) :
-                    annotatedArray.slice(0, annotatedArray.length - 1),
+                fn = constructor,
+                deps = dependencyArray.length === 0 ? (fn.$$deps || []) : dependencyArray,
                 injected;
             Template.prototype = fn.prototype;
             instance = new Template();

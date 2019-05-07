@@ -17,10 +17,19 @@
     JsInject.ERROR_FUNCTION = 'Must pass function to invoke.';
     JsInject.ERROR_SERVICE = 'Service does not exist.';
 
-    JsInject.prototype.get = function(name) {
-        var wrapper = this.container[name];
+    JsInject.prototype.get = function(name, selector) {
+        var wrapper = this.container[name];       
         if (wrapper) {
-            return wrapper();
+            if (selector) {
+                wrapper = wrapper[selector];
+            }
+            
+            if (wrapper) {
+                return wrapper();                
+            }
+            else {
+                throw JsInject.ERROR_SERVICE;                
+            }
         }
         throw JsInject.ERROR_SERVICE;
     };
@@ -58,22 +67,41 @@
         }
 
         var _this = this;
-        this.container[name] = function () {
+        var maker = function () {
             var Template = function () {},
                 result = {},
                 instance,
-                fn = constructor,
-                deps = dependencyArray.length === 0 ? (fn.$$deps || []) : dependencyArray,
+                dependencyArray = (dependencyArray.length == 0) ? (constructor.$$deps || []) : dependencyArray,
                 injected;
-            Template.prototype = fn.prototype;
+            Template.prototype = constructor.prototype;
             instance = new Template();
-            injected = _this.invoke(fn, deps, instance, name);
-            result = injected || instance;
-            _this.container[name] = function () {
+            injected = _this.invoke(constructor, dependencyArray, instance, name);
+            result = injected || instance;         
+            var cached = function () {
                 return result;
             };
+                        
+            if (selector) {
+                _this.container[name][selector] = cached;              
+            }
+            else {
+                _this.container[name] = cached;
+            }
+                        
             return result;
         };
+        
+        if (selector) {
+            if (!registered) {
+                registered = {};
+            }
+            
+            registered[selector] = maker;            
+            this.container[name] = registered;
+        }
+        else {
+            this.container[name] = maker;            
+        }
     };
 
     function Wrapper() {

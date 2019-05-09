@@ -23,6 +23,14 @@
             if (selector) {
                 wrapper = wrapper[selector];
             }
+            else {
+                if (typeof wrapper === 'object')
+                {   
+                    var result = {}; 
+                    Object.keys(wrapper).forEach(function(item) { result[item] = wrapper[item](); });
+                    return result;
+                }
+            }
             
             if (wrapper) {
                 return wrapper();                
@@ -71,11 +79,11 @@
             var Template = function () {},
                 result = {},
                 instance,
-                dependencyArray = (dependencyArray.length == 0) ? (constructor.$$deps || []) : dependencyArray,
+                deps = (dependencyArray.length == 0) ? (constructor.$$deps || []) : dependencyArray,
                 injected;
             Template.prototype = constructor.prototype;
             instance = new Template();
-            injected = _this.invoke(constructor, dependencyArray, instance, name);
+            injected = _this.invoke(constructor, deps, instance, name);
             result = injected || instance;         
             var cached = function () {
                 return result;
@@ -94,10 +102,10 @@
         if (selector) {
             if (!registered) {
                 registered = {};
+                this.container[name] = registered;                
             }
             
             registered[selector] = maker;            
-            this.container[name] = registered;
         }
         else {
             this.container[name] = maker;            
